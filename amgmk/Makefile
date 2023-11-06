@@ -12,8 +12,8 @@ CFLAGS   = -O3 -fopenmp -c -pg
 
 LDFLAGS  = -O3 -fopenmp -lm -pg
 
-LIBS     = 
-LIB_DIRS =
+LIBS     = -ltimer 
+LIB_DIRS = -L. 
 
 PROG     = AMGMk
 
