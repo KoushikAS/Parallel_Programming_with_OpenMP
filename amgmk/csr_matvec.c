@@ -126,13 +126,13 @@ hypre_CSRMatrixMatvec( double           alpha,
    {
       if (temp == 0.0)
       {
-	 for (i = 0; i < num_rows*num_vectors; i++)
-	    y_data[i] = 0.0;
+          for (i = 0; i < num_rows * num_vectors; i++)
+            y_data[i] = 0.0;
       }
       else
       {
-	 for (i = 0; i < num_rows*num_vectors; i++)
-	    y_data[i] *= temp;
+          for (i = 0; i < num_rows * num_vectors; i++)
+            y_data[i] *= temp;
       }
    }
    Timer_Stop("block2");
@@ -144,15 +144,12 @@ hypre_CSRMatrixMatvec( double           alpha,
 /* use rownnz pointer to do the A*x multiplication  when num_rownnz is smaller than num_rows */
 
    Timer_Start("block3");
-   if (num_rownnz < xpar*(num_rows))
-   {
-	   if ( num_vectors==1 )
-       {
-      for (i = 0; i < num_rownnz; i++)
-      {
-         m = A_rownnz[i];
+   if (num_rownnz < xpar * (num_rows)) {
+      if (num_vectors == 1) {
+          for (i = 0; i < num_rownnz; i++) {
+            m = A_rownnz[i];
 
-         /*
+            /*
           * for (jj = A_i[m]; jj < A_i[m+1]; jj++)
           * {
           *         j = A_j[jj];   
@@ -160,59 +157,49 @@ hypre_CSRMatrixMatvec( double           alpha,
           * } */
          
             tempx = y_data[m];
-	    Timer_Start("block4");
+	         Timer_Start("block4");
             for (jj = A_i[m]; jj < A_i[m+1]; jj++) 
                tempx +=  A_data[jj] * x_data[A_j[jj]];
-	    Timer_Stop("block4");
+	         Timer_Stop("block4");
             y_data[m] = tempx;
          }
-       }
-         else{
-       for (i = 0; i < num_rownnz; i++)
-        {
-         m = A_rownnz[i];
-		 Timer_Start("block5");
-            for ( j=0; j<num_vectors; ++j )
-            {
+      }
+      else {
+         for (i = 0; i < num_rownnz; i++) {
+            m = A_rownnz[i];
+            Timer_Start("block5");
+            for (j = 0; j < num_vectors; ++j) {
                tempx = y_data[ j*vecstride_y + m*idxstride_y ];
                for (jj = A_i[m]; jj < A_i[m+1]; jj++) 
                   tempx +=  A_data[jj] * x_data[ j*vecstride_x + A_j[jj]*idxstride_x ];
                y_data[ j*vecstride_y + m*idxstride_y] = tempx;
             }
-	    Timer_Stop("block5");
+            Timer_Stop("block5");
          }
       }
-
    }
-   else
-   {
-   if ( num_vectors==1 )
-    {
-      #pragma omp parallel for private(jj, temp)   
-      for (i = 0; i < num_rows; i++)
-      	{ 
+   else {
+      if (num_vectors == 1) {
+      #pragma omp parallel for private(jj, temp)
+         for (i = 0; i < num_rows; i++) {
             temp = y_data[i];
             for (jj = A_i[i]; jj < A_i[i+1]; jj++)
                temp += A_data[jj] * x_data[A_j[jj]];
             y_data[i] = temp;
-	    
          }
       }
-   else{
-      #pragma omp parallel for private(jj, temp)
-      for (i = 0; i < num_rows; i++)
-        {
-          for ( j=0; j<num_vectors; ++j )
-            {
+      else {
+         #pragma omp parallel for private(jj, temp)
+         for (i = 0; i < num_rows; i++) {
+            for (j = 0; j < num_vectors; ++j) {
                temp = y_data[ j*vecstride_y + i*idxstride_y ];
-               for (jj = A_i[i]; jj < A_i[i+1]; jj++)
-               {
+               for (jj = A_i[i]; jj < A_i[i + 1]; jj++) {
                   temp += A_data[jj] * x_data[ j*vecstride_x + A_j[jj]*idxstride_x ];
                }
                y_data[ j*vecstride_y + i*idxstride_y ] = temp;
             }
-	 }
-      
+         }
+      }
    }
    Timer_Stop("block3");
 
@@ -229,7 +216,7 @@ hypre_CSRMatrixMatvec( double           alpha,
    Timer_Stop("block8");
    Timer_Print();
    return ierr;
-}
+   }
 
 /*--------------------------------------------------------------------------
  * hypre_CSRMatrixMatvecT
