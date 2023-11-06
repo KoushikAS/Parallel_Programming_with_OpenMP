@@ -53,6 +53,11 @@
  *
  */
 
+// Citation
+// OpenAI. (n.d.). ChatGPT. OpenAI.
+//
+//
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>

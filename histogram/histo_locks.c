@@ -402,6 +402,7 @@ long* histogram(char* fn_input) {
 
   /* obtain histogram from image, repeated 100 times */
   for (m=0; m<100; m++) {
+   #pragma omp parallel for default(none) shared(image, locks, histo) private(i, j)  
     for (i=0; i<image->row; i++) {
       for (j=0; j<image->col; j++) {
 	int pixel_value = image->content[i][j];
