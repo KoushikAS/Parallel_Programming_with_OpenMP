@@ -39,10 +39,6 @@
  * hypre_CSRMatrixMatvec
  *--------------------------------------------------------------------------*/
 
-extern void Timer_Start(char *);
-extern void Timer_Stop(char *);
-extern void Timer_Print();
-
 
 int
 hypre_CSRMatrixMatvec( double           alpha,
@@ -121,7 +117,7 @@ hypre_CSRMatrixMatvec( double           alpha,
    
    temp = beta / alpha;
 
-   Timer_Start("block2");
+
    if (temp != 1.0)
    {
       if (temp == 0.0)
@@ -135,7 +131,7 @@ hypre_CSRMatrixMatvec( double           alpha,
             y_data[i] *= temp;
       }
    }
-   Timer_Stop("block2");
+
 
    /*-----------------------------------------------------------------
     * y += A*x
@@ -143,7 +139,7 @@ hypre_CSRMatrixMatvec( double           alpha,
 
 /* use rownnz pointer to do the A*x multiplication  when num_rownnz is smaller than num_rows */
 
-   Timer_Start("block3");
+
    if (num_rownnz < xpar * (num_rows)) {
       if (num_vectors == 1) {
           for (i = 0; i < num_rownnz; i++) {
@@ -157,24 +153,20 @@ hypre_CSRMatrixMatvec( double           alpha,
           * } */
          
             tempx = y_data[m];
-	         Timer_Start("block4");
             for (jj = A_i[m]; jj < A_i[m+1]; jj++) 
                tempx +=  A_data[jj] * x_data[A_j[jj]];
-	         Timer_Stop("block4");
             y_data[m] = tempx;
          }
       }
       else {
          for (i = 0; i < num_rownnz; i++) {
             m = A_rownnz[i];
-            Timer_Start("block5");
             for (j = 0; j < num_vectors; ++j) {
                tempx = y_data[ j*vecstride_y + m*idxstride_y ];
                for (jj = A_i[m]; jj < A_i[m+1]; jj++) 
                   tempx +=  A_data[jj] * x_data[ j*vecstride_x + A_j[jj]*idxstride_x ];
                y_data[ j*vecstride_y + m*idxstride_y] = tempx;
             }
-            Timer_Stop("block5");
          }
       }
    }
@@ -201,20 +193,20 @@ hypre_CSRMatrixMatvec( double           alpha,
          }
       }
    }
-   Timer_Stop("block3");
+
 
    /*-----------------------------------------------------------------
     * y = alpha*y
     *-----------------------------------------------------------------*/
 
-   Timer_Start("block8");
+
    if (alpha != 1.0)
    {
       for (i = 0; i < num_rows*num_vectors; i++)
 	 y_data[i] *= alpha;
    }
-   Timer_Stop("block8");
-   Timer_Print();
+
+
    return ierr;
    }
 
