@@ -135,25 +135,32 @@ void test_Matvec()
 
   hypre_SeqVectorSetConstantValues(x,1);
   hypre_SeqVectorSetConstantValues(y,0);
-
-  t0 = omp_get_wtime();
-  for (i=0; i<testIter; ++i)
-      hypre_CSRMatrixMatvec(1,A,x,0,y);
-  t1 = omp_get_wtime() ;
-
-  totalWallTime += t1 - t0;
-
  
+  #pragma omp parallel
+  {
+  t0 = omp_get_wtime();
+  
+  #pragma omp for schedule(static) reduction(+:totalWallTime)
+  for (i=0; i<testIter; ++i){
+      hypre_CSRMatrixMatvec(1,A,x,0,y);
+ 
+  	double local_t1 = omp_get_wtime() ;
+  	totalWallTime += local_t1 - t0;
+  }
+  }
+
   y_data = hypre_VectorData(y);
   sol_data = hypre_VectorData(sol);
 
   error = 0;
+  	  
   for (i=0; i < nx*ny*nz; i++)
   {
       diff = fabs(y_data[i]-sol_data[i]);
       if (diff > error) error = diff;
   }
-     
+  
+
   if (error > 0) printf(" \n Matvec: error: %e\n", error);
 
   hypre_TFree(values);
@@ -189,19 +196,25 @@ void test_Relax()
   A = GenerateSeqLaplacian(nx, ny, nz, values, &y, &x, &sol);
 
   hypre_SeqVectorSetConstantValues(x,1);
-
+  #pragma omp parallel
+  {
   t0 = omp_get_wtime();
-  for (i=0; i<testIter; ++i)
+ 
+  #pragma omp for schedule(static) reduction(+:totalWallTime)
+  for (i=0; i<testIter; ++i){
       hypre_BoomerAMGSeqRelax(A, sol, x);
-  t1 = omp_get_wtime();
-
-  totalWallTime += t1 - t0;
+  
+      double local_t1  = omp_get_wtime();
+      totalWallTime += local_t1 - t0;
+  }
+  }
 
   x_data = hypre_VectorData(x);
   error = 0;
+
   for (i=0; i < nx*ny*nz; i++)
   {
-      diff = fabs(x_data[i]-1);
+      double diff = fabs(x_data[i]-1);
       if (diff > error) error = diff;
   }
      
@@ -238,21 +251,22 @@ void test_Axpy()
   hypre_SeqVectorSetConstantValues(x,1);
   hypre_SeqVectorSetConstantValues(y,1);
 
- 
+   
   t0 = omp_get_wtime();
   for (i=0; i<testIter; ++i)
       hypre_SeqVectorAxpy(alpha,x,y);
-  t1 = omp_get_wtime();
   
-
+  t1 = omp_get_wtime();
+      
   y_data = hypre_VectorData(y);
   error = 0;
   for (i=0; i < nx; i++)
   {
-    diff = fabs(y_data[i]-1-0.5*(double)testIter);
+      diff = fabs(y_data[i]-1-0.5*(double)testIter);
       if (diff > error) error = diff;
   }
-     
+  
+
   if (error > 0) printf(" \n Axpy: error: %e\n", error);
 
   totalWallTime += t1 - t0; 
